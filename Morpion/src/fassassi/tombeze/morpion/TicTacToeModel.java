@@ -84,6 +84,7 @@ public class TicTacToeModel {
 			private static final TicTacToeModel INSTANCE = new TicTacToeModel();
 		}
 		
+		
 		public void restart() {
 			winner.set(Owner.NONE);
 	        for (int i = 0; i < BOARD_HEIGHT; i++) {
@@ -113,18 +114,82 @@ public class TicTacToeModel {
 			 return winningBoard[row][column];
 		}
 		
-		/**
-		* Cette fonction ne doit donner le bon résultat que si le jeu
-		* est terminé. L’affichage peut être caché avant la fin du jeu.
-		*
-		* @return résultat du jeu sous forme de texte
-		*/
-		public final StringProperty getEndOfGameMessage() {
-			return endOfGameMessage;
-		}
 		
 		public void setWinner(Owner winner) {
 			this.winner.set(winner);
+		}
+		
+		public Owner getWinner() {
+			//victoire line
+			for(int i=0; i<BOARD_WIDTH; i++) {
+				Owner firstSquareOwner = board[i][0].get();
+				if(firstSquareOwner != Owner.NONE) {
+					boolean lineWinner = true;
+					for(int j = 1; j<BOARD_HEIGHT; j++) {
+						if(board[i][j].get() != firstSquareOwner) {
+							lineWinner = false;
+							break;
+						}
+					}
+					
+					if(lineWinner) {
+						return firstSquareOwner;
+					}
+				}
+				
+			}
+			
+			//victoire column
+			for(int j = 0; j<BOARD_HEIGHT; j++) {
+				Owner firstSquareOwner = board[0][j].get();
+				if(firstSquareOwner != Owner.NONE) {
+					boolean colWinner = true;
+					for(int i = 1; i<BOARD_WIDTH; i++) {
+						if(board[i][j].get() != firstSquareOwner) {
+							colWinner = false;
+							break;
+						}
+					}
+					if(colWinner) {
+						return firstSquareOwner;
+					}
+				}
+			}
+			
+			//victoire diagonale1
+			Owner firstSquareOwner = board[0][0].get();
+			if(firstSquareOwner != Owner.NONE) {
+				boolean diag1Winner = true;
+				
+				for(int i = 0; i < BOARD_WIDTH; i++) {
+					if(board[i][i].get() != firstSquareOwner) {
+						diag1Winner = false;
+						break;
+					}
+				}
+				if(diag1Winner) {
+					return firstSquareOwner;
+				}
+			}
+			
+			//victoire diagonale2
+			firstSquareOwner = board[0][BOARD_HEIGHT - 1].get();
+			if(firstSquareOwner != Owner.NONE) {
+				boolean diag2Winner = true;
+				for(int i = 0; i<BOARD_WIDTH; i++) {
+					if (board[i][BOARD_HEIGHT - 1 - i].get() != firstSquareOwner) {
+						diag2Winner = false;
+		                break;
+		            }
+				}
+				if(diag2Winner) {
+					return firstSquareOwner;
+				}
+				
+			}
+			
+			 return Owner.NONE; //Match nul
+			
 		}
 		
 		public boolean validSquare(int row, int column) {
@@ -143,14 +208,18 @@ public class TicTacToeModel {
 			if (validSquare(row, column)) {
 				board[row][column].set(turn.get());
 				round++;
-				
-				
+			
+				//Incrémente le nombre de cases occupées par le joueur X ou O en fonction du joueur
+				if (turn.get() == Owner.FIRST) {
+		            squaresForX.set(squaresForX.get() + 1);
+		        } else {
+		            squaresForO.set(squaresForO.get() + 1);
+		        }
+				 emptySquares.set(emptySquares.get() - 1);
+				 
+				 nextPlayer();
 			}
 		}
-		
-		/**
-		 * 
-		 */
 		
 		
 		/**
@@ -162,7 +231,7 @@ public class TicTacToeModel {
 		}
 		
 		public NumberExpression getScore(Owner owner) {
-			
+			 return owner == Owner.FIRST ? squaresForX : squaresForO;
 		}
 		
 		/**
@@ -173,7 +242,45 @@ public class TicTacToeModel {
 			return squaresForO.greaterThanOrEqualTo(3).or(squaresForX.greaterThanOrEqualTo(3)).or(emptySquares.isEqualTo(0));
 		}
 		
+		/**
+		* Cette fonction ne doit donner le bon résultat que si le jeu
+		* est terminé. L’affichage peut être caché avant la fin du jeu.
+		*
+		* @return résultat du jeu sous forme de texte
+		*/
+		public final StringExpression getEndOfGameMessage() {
+			if(winner.get().equals(Owner.FIRST)) {
+				endOfGameMessage.set("Game Over. Le joueur gagant est le premier joueur");
+			}
+			else if(winner.get().equals(Owner.SECOND)) {
+				endOfGameMessage.set("Game Over. Le joueur gagant est le deuxieme joueur");
+			}
+			else {
+				endOfGameMessage.set("Match nul");
+			}
+			
+			return endOfGameMessage;
+		}
 		
+		public static int getBHeigth() {
+			return BOARD_HEIGHT;
+		}
+		
+		public static int getBWidth() {
+			return BOARD_WIDTH;
+		}
+		
+		public SimpleIntegerProperty getSquaresForX() {
+			return squaresForX;
+		}
+		
+		public SimpleIntegerProperty getSquaresForO() {
+			return squaresForO;
+		}
+		
+		public SimpleIntegerProperty getEmptySquares() {
+			return emptySquares;
+		}
 
 
 }
